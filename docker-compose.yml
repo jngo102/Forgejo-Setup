@@ -1,24 +1,45 @@
+networks:
+  net:
+    driver: bridge
+  
+volumes:
+  postgres_data:
+  server_data:
+  runner_data:
+  runner_cache:
+
 services:
   db:
-    image: postgres:17
+    image: postgres:17-alpine
     container_name: forgejo-db
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forgejo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_DB: forgejo
       POSTGRES_USER: forgejo
       POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_INITDB_ARGS: "-c shared_buffers=256MB -c effective_cache_size=1GB"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - net
   server:
     image: codeberg.org/forgejo/forgejo:15
     container_name: forgejo-server
     restart: always
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/v1/version"]
-      interval: 5s
-      timeout: 2s
-      retries: 5
-      start_period: 10s
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
     environment:
       USER_UID: 1000
       USER_GID: 1000
@@ -28,29 +49,29 @@ services:
       FORGEJO__database__USER: forgejo
       FORGEJO__database__PASSWD: $DB_PASSWORD
     volumes:
-      - ./data/server:/data
+      - server_data:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
       - '3000:3000'
       - '22:22'
-    depends_on:
-      - db
+    networks:
+      - net
   runner:
     image: code.forgejo.org/forgejo/runner:12
     container_name: forgejo-runner
     restart: always
     user: "0"
-    # group_add:
-    #   - 1000
-    privileged: true
     depends_on:
       server:
         condition: service_healthy
+    environment:
+      RUNNER_CAPACITY: 4
     volumes:
-      - ./config.yaml:/config.yaml
-      - ./data/runner:/data
+      - ./config.yaml:/config.yaml:ro
+      - runner_data:/data
+      - runner_cache:/data/cache
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./.env:/data/.env
-    # command: '/bin/sh -c "while : ; do sleep 1 ; done ;"'
     command: forgejo-runner daemon --config /config.yaml
+    networks:
+      - net

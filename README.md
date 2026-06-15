@@ -18,7 +18,13 @@
     ```
 
     1. One or more services may fail, ignore this for now.
-5. In the generated file at [`data/server/gitea/conf/app.ini`](./data/server/gitea/conf/app.ini), add the entry:
+5. Open the generated server configuration file with the command
+
+    ```sh
+    docker exec -it forgejo-server vi /data/gitea/conf/app.ini
+    ```
+
+    and add the following lines:
 
     ```conf
     [actions]
@@ -43,7 +49,7 @@
 12. Re-run docker compose:
 
     ```sh
-    docker compose down; docker compose up -d
+    docker compose down && docker compose up -d
     ```
 
 13. Verify that the `forgejo-runner` Actions runner has a `Status` of `Idle` under `Site administration > Actions > Runners`
