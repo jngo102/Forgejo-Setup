@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:17
+    container_name: forgejo-db
+    restart: always
+    environment:
+      POSTGRES_DB: forgejo
+      POSTGRES_USER: forgejo
+      POSTGRES_PASSWORD: $DB_PASSWORD
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+  server:
+    image: codeberg.org/forgejo/forgejo:15
+    container_name: forgejo-server
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/v1/version"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 10s
+    environment:
+      USER_UID: 1000
+      USER_GID: 1000
+      FORGEJO__database__DB_TYPE: postgres
+      FORGEJO__database__HOST: db:5432
+      FORGEJO__database__NAME: forgejo
+      FORGEJO__database__USER: forgejo
+      FORGEJO__database__PASSWD: $DB_PASSWORD
+    volumes:
+      - ./data/server:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - '3000:3000'
+      - '22:22'
+    depends_on:
+      - db
+  runner:
+    image: code.forgejo.org/forgejo/runner:12
+    container_name: forgejo-runner
+    restart: always
+    user: "0"
+    # group_add:
+    #   - 1000
+    privileged: true
+    depends_on:
+      server:
+        condition: service_healthy
+    volumes:
+      - ./config.yaml:/config.yaml
+      - ./data/runner:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.env:/data/.env
+    # command: '/bin/sh -c "while : ; do sleep 1 ; done ;"'
+    command: forgejo-runner daemon --config /config.yaml
