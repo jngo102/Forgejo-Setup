@@ -5,7 +5,7 @@
 1. Clone this repository to the folder `forgejo`:
 
     ```sh
-    git clone https://github.com/jngo102/Forgejo-Setup.git forgejo
+    git clone https://codeberg.org/JngoCreates/Forgejo-Setup.git forgejo
     ```
 
     1. Cloning to the default folder `forgejo-setup` will break the created network name under unless it is renamed in `config.yaml` under `container.network`
