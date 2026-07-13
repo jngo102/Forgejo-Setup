@@ -9,7 +9,7 @@
     ```
 
     1. Cloning to the default folder `forgejo-setup` will break the created network name under unless it is renamed in `config.yaml` under `container.network`
-2. Create a `.env` file at the repository root
+2. Create a `.env` file at the repository root: `cd forgejo && vi .env`
 3. In the `.env` file, add the entry `DB_PASSWORD` with any value: `DB_PASSWORD=mypassword`
 4. At the repository root, start the containers:
 
