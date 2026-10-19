@@ -37,6 +37,14 @@
     ```
 
     to set the actions source to be GitHub, otherwise workflows will not be able to fetch any Actions and fail
+
+    1. If you also want to enable Packages, e.g. container registries, add the following lines to the `app.ini` file:
+
+        ```sh
+        [packages]
+        ENABLED = true
+        ```
+
 6. In a browser, go to [localhost:3000](http://localhost:3000/)
 7. Create an Administrator account at the bottom of the page and click the `Install Forgejo` button
 8. Click the top right avatar to open up a context menu and click on `Site administration`
