@@ -29,20 +29,28 @@
     docker exec -it forgejo-server vi /data/gitea/conf/app.ini
     ```
 
-    and add the following lines:
+    1. If you want to use actions hosted on GitHub instead of Forgejo's own actions, add the following lines:
 
-    ```conf
-    [actions]
-    DEFAULT_ACTIONS_URL = github
-    ```
+        ```ini
+        [actions]
+        DEFAULT_ACTIONS_URL = github
+        ```
 
-    to set the actions source to be GitHub, otherwise workflows will not be able to fetch any Actions and fail
+        otherwise you will need to explicitly prepend `https://github.com/` to every action name.
 
-    1. If you also want to enable Packages, e.g. container registries, add the following lines to the `app.ini` file:
+    2. If you also want to enable Packages, e.g. container registries, add the following lines to the `app.ini` file:
 
-        ```sh
+        ```ini
         [packages]
         ENABLED = true
+        ```
+
+    3. To get Forgejo's own `upload-artifact` action to work, change the `DOMAIN` and `ROOT_URL` entries to use a reachable hostname or IP address, such as your LAN address, e.g.:
+
+        ```ini
+        [server]
+        DOMAIN = 192.168.50.1
+        ROOT_URL = http://192.168.50.1:3000/
         ```
 
 6. In a browser, go to [localhost:3000](http://localhost:3000/)
